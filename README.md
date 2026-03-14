@@ -4,11 +4,11 @@
 
 Created by Agraja.
 
-## What changed in 1.0.04
+## What changed in 1.0.05
 
-- Hardened the update flow so WinSwitch releases its global input hooks before installing an update.
-- Updates now run from a tiny external launcher that waits for WinSwitch to exit fully, then restarts it after install.
-- Added installer-side application closing support during update installs.
+- Restored the working `Alt+Tab` hook registration path.
+- Kept the safer update flow that releases hooks before install and restarts WinSwitch after the update.
+- Added direct installer download links in the repo README.
 
 ## How it works
 
@@ -46,6 +46,11 @@ WinSwitch checks [GitHub Releases](https://github.com/agraja38/WinSwitch/release
 - `WinSwitch-Setup-x64.exe`
 - `WinSwitch-Setup-ARM64.exe`
 
+Direct installer links:
+
+- [Latest x64 installer](https://github.com/agraja38/WinSwitch/releases/latest/download/WinSwitch-Setup-x64.exe)
+- [Latest ARM64 installer](https://github.com/agraja38/WinSwitch/releases/latest/download/WinSwitch-Setup-ARM64.exe)
+
 The repo owner and name are already configured in [UpdateConfiguration.cs](C:/Users/agraj/iCloudDrive/Codex/WinSwitch/UpdateConfiguration.cs).
 
 ## Build
@@ -76,7 +81,7 @@ Generated installers:
 ## Publish a release
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\publish-release.ps1 -Version 1.0.04
+powershell -ExecutionPolicy Bypass -File .\publish-release.ps1 -Version 1.0.05
 ```
 
 ## Notes

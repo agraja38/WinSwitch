@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace WinSwitch;
@@ -42,7 +43,10 @@ public sealed class KeyboardHookService : IDisposable
             return;
         }
 
-        hookHandle = NativeMethods.SetWindowsHookEx(NativeMethods.WH_KEYBOARD_LL, hookProc, 0, 0);
+        using var currentProcess = Process.GetCurrentProcess();
+        using var currentModule = currentProcess.MainModule;
+        var moduleHandle = NativeMethods.GetModuleHandle(currentModule?.ModuleName);
+        hookHandle = NativeMethods.SetWindowsHookEx(NativeMethods.WH_KEYBOARD_LL, hookProc, moduleHandle, 0);
 
         if (hookHandle == 0)
         {
