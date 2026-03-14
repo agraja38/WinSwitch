@@ -4,11 +4,11 @@
 
 Created by Agraja.
 
-## What changed in 1.0.08
+## What changed in 1.0.09
 
-- Replaced the failing `Alt+Tab` path with `Ctrl+Alt+Left` and `Ctrl+Alt+Right` keyboard shortcuts.
-- Added an update progress UI for download and install, plus a completion message after install finishes.
-- Kept the safer update shutdown/restart flow.
+- Replaced the non-responsive shortcut registration path with a low-level keyboard hook for `Ctrl+Alt+Left` and `Ctrl+Alt+Right`.
+- Updated the app icon to the new `W` and bidirectional arrow mark.
+- Kept the update progress UI and completion message flow from `1.0.08`.
 
 ## How it works
 
@@ -81,7 +81,7 @@ Generated installers:
 ## Publish a release
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\publish-release.ps1 -Version 1.0.08
+powershell -ExecutionPolicy Bypass -File .\publish-release.ps1 -Version 1.0.09
 ```
 
 ## Notes

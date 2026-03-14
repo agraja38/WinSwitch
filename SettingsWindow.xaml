@@ -74,7 +74,7 @@
             </Border>
 
             <DockPanel Grid.Row="7" Margin="0,22,0,0" LastChildFill="False">
-                <TextBlock VerticalAlignment="Center" Foreground="#63584D" Text="Version 1.0.08 - Created by Agraja" />
+                <TextBlock VerticalAlignment="Center" Foreground="#63584D" Text="Version 1.0.09 - Created by Agraja" />
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                     <Button x:Name="OpenSettingsFileButton" Width="130" Height="38" Margin="0,0,10,0" Content="Open Settings File" />
                     <Button x:Name="SaveButton" Width="96" Height="38" Content="Save" />
