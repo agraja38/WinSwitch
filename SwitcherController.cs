@@ -99,7 +99,7 @@ public sealed class SwitcherController : IDisposable
 
     private void OnStepRequested(int direction)
     {
-        dispatcher.Invoke(() =>
+        dispatcher.BeginInvoke(() =>
         {
             if (!isSwitching)
             {
@@ -119,19 +119,19 @@ public sealed class SwitcherController : IDisposable
 
             lastDirection = direction >= 0 ? 1 : -1;
             UpdateSelection();
-        });
+        }, DispatcherPriority.Send);
     }
 
     private void OnSwipeRequested(int direction)
     {
         OnStepRequested(direction);
 
-        dispatcher.Invoke(() =>
+        dispatcher.BeginInvoke(() =>
         {
             swipeCommitTimer.Stop();
             swipeCommitTimer.Interval = TimeSpan.FromMilliseconds(settings.SwipeCommitDelayMs);
             swipeCommitTimer.Start();
-        });
+        }, DispatcherPriority.Background);
     }
 
     private async void OnCommitRequested()
@@ -187,11 +187,11 @@ public sealed class SwitcherController : IDisposable
 
     private void OnCancelRequested()
     {
-        dispatcher.Invoke(() =>
+        dispatcher.BeginInvoke(() =>
         {
             swipeCommitTimer.Stop();
             ResetSwitcher();
-        });
+        }, DispatcherPriority.Send);
     }
 
     private async void OnCheckForUpdatesRequested()

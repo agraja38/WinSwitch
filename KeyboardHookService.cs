@@ -76,12 +76,19 @@ public sealed class KeyboardHookService : IDisposable
             return NativeMethods.CallNextHookEx(hookHandle, nCode, wParam, lParam);
         }
 
-        var data = Marshal.PtrToStructure<NativeMethods.KbdLlHookStruct>(lParam);
-        var isHandled = HandleKeyMessage((uint)wParam, (int)data.vkCode);
-        return isHandled ? 1 : NativeMethods.CallNextHookEx(hookHandle, nCode, wParam, lParam);
+        try
+        {
+            var data = Marshal.PtrToStructure<NativeMethods.KbdLlHookStruct>(lParam);
+            var isHandled = HandleKeyMessage((uint)wParam, (int)data.vkCode, data.flags);
+            return isHandled ? 1 : NativeMethods.CallNextHookEx(hookHandle, nCode, wParam, lParam);
+        }
+        catch
+        {
+            return NativeMethods.CallNextHookEx(hookHandle, nCode, wParam, lParam);
+        }
     }
 
-    private bool HandleKeyMessage(uint message, int virtualKey)
+    private bool HandleKeyMessage(uint message, int virtualKey, uint flags)
     {
         if (!Enabled)
         {
@@ -90,6 +97,7 @@ public sealed class KeyboardHookService : IDisposable
 
         var isDown = message is NativeMethods.WM_KEYDOWN or NativeMethods.WM_SYSKEYDOWN;
         var isUp = message is NativeMethods.WM_KEYUP or NativeMethods.WM_SYSKEYUP;
+        var altDownForEvent = IsAltDown || (flags & NativeMethods.LLKHF_ALTDOWN) != 0;
 
         switch (virtualKey)
         {
@@ -109,7 +117,7 @@ public sealed class KeyboardHookService : IDisposable
                 sequenceActive = false;
                 CancelRequested?.Invoke();
                 return true;
-            case NativeMethods.VK_TAB when isDown && IsAltDown:
+            case NativeMethods.VK_TAB when isDown && altDownForEvent:
                 sequenceActive = true;
                 StepRequested?.Invoke(IsShiftDown ? -1 : 1);
                 return true;

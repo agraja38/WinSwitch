@@ -10,6 +10,7 @@ internal static class NativeMethods
     public const uint WM_SYSKEYDOWN = 0x0104;
     public const uint WM_SYSKEYUP = 0x0105;
     public const int WM_HOTKEY = 0x0312;
+    public const uint LLKHF_ALTDOWN = 0x20;
 
     public const int VK_TAB = 0x09;
     public const int VK_ESCAPE = 0x1B;

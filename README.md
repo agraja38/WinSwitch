@@ -4,11 +4,11 @@
 
 Created by Agraja.
 
-## What changed in 1.0.05
+## What changed in 1.0.06
 
-- Restored the working `Alt+Tab` hook registration path.
-- Kept the safer update flow that releases hooks before install and restarts WinSwitch after the update.
-- Added direct installer download links in the repo README.
+- Tightened `Alt+Tab` detection using the low-level keyboard `ALT` flag.
+- Made the hook-driven switch path non-blocking so keyboard input and macro software are less likely to stall.
+- Kept the safer update shutdown/restart flow and direct installer links.
 
 ## How it works
 
@@ -81,7 +81,7 @@ Generated installers:
 ## Publish a release
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\publish-release.ps1 -Version 1.0.05
+powershell -ExecutionPolicy Bypass -File .\publish-release.ps1 -Version 1.0.06
 ```
 
 ## Notes
