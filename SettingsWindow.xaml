@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="WinSwitch Settings"
     Width="520"
-    Height="560"
+    Height="580"
     Background="#FFF7F4ED"
     ResizeMode="NoResize"
     WindowStartupLocation="CenterScreen">
@@ -73,8 +73,7 @@
                 <StackPanel>
                     <TextBlock FontSize="16" FontWeight="SemiBold" Text="Updates" />
                     <CheckBox x:Name="CheckForUpdatesCheckBox" Margin="0,14,0,0" Content="Check GitHub Releases on launch" />
-                    <TextBlock Margin="0,12,0,0" Foreground="#63584D" TextWrapping="Wrap"
-                               Text="The in-app updater downloads the latest installer asset from your GitHub release page." />
+                    <Button x:Name="CheckForUpdatesButton" Width="170" Height="36" Margin="0,14,0,0" HorizontalAlignment="Left" Content="Check for Updates Now" />
                 </StackPanel>
             </Border>
 
@@ -84,7 +83,7 @@
             </Border>
 
             <DockPanel Grid.Row="8" Margin="0,22,0,0" LastChildFill="False">
-                <TextBlock VerticalAlignment="Center" Foreground="#63584D" Text="Version 1.0.01" />
+                <TextBlock VerticalAlignment="Center" Foreground="#63584D" Text="Version 1.0.02" />
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                     <Button x:Name="OpenSettingsFileButton" Width="130" Height="38" Margin="0,0,10,0" Content="Open Settings File" />
                     <Button x:Name="SaveButton" Width="96" Height="38" Content="Save" />

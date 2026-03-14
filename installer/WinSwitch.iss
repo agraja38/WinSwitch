@@ -1,5 +1,5 @@
 #define MyAppName "WinSwitch"
-#define MyAppVersion "1.0.01"
+#define MyAppVersion "1.0.02"
 #define MyAppPublisher "Codex"
 #define MyAppExeName "WinSwitch.exe"
 
@@ -38,6 +38,7 @@ ArchitecturesAllowed={#MyArchitecturesAllowed}
 ArchitecturesInstallIn64BitMode={#MyArchitecturesInstallMode}
 PrivilegesRequired=lowest
 UninstallDisplayIcon={app}\{#MyAppExeName}
+SetupIconFile=..\assets\AppIcon.ico
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

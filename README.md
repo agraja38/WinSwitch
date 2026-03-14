@@ -2,11 +2,13 @@
 
 `WinSwitch` is a Windows app switcher built to feel closer to the macOS fullscreen swipe gesture.
 
-## What changed in 1.0.01
+## What changed in 1.0.02
 
 - Replaced the old card overlay with a fullscreen swipe transition.
 - Added a settings window so users can configure gestures, timing, and update checks.
 - Added GitHub-release updates for `agraja38/WinSwitch`.
+- Fixed fast middle-button swipes so release-time threshold crossings still trigger a switch.
+- Added a manual `Check for Updates Now` button inside settings.
 
 ## How it works
 
@@ -77,7 +79,7 @@ Generated installers:
 ## Publish a release
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\publish-release.ps1 -Version 1.0.01
+powershell -ExecutionPolicy Bypass -File .\publish-release.ps1 -Version 1.0.02
 ```
 
 ## Notes

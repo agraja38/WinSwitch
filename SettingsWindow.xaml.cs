@@ -15,11 +15,13 @@ public partial class SettingsWindow : Window
         ThresholdSlider.ValueChanged += (_, _) => ThresholdValueText.Text = $"Swipe threshold: {(int)ThresholdSlider.Value}px";
         CommitDelaySlider.ValueChanged += (_, _) => CommitDelayValueText.Text = $"Commit after {(int)CommitDelaySlider.Value} ms";
         AnimationDurationSlider.ValueChanged += (_, _) => AnimationDurationValueText.Text = $"Animation length {(int)AnimationDurationSlider.Value} ms";
+        CheckForUpdatesButton.Click += (_, _) => ManualUpdateRequested?.Invoke();
         SaveButton.Click += OnSaveClicked;
         OpenSettingsFileButton.Click += OnOpenSettingsFileClicked;
     }
 
     public event Action<AppSettings>? SettingsSaved;
+    public event Action? ManualUpdateRequested;
 
     public void LoadSettings(AppSettings settings)
     {

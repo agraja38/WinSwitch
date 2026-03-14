@@ -231,6 +231,7 @@ public sealed class SwitcherController : IDisposable
         {
             var window = new SettingsWindow(settingsService);
             window.LoadSettings(settings);
+            window.ManualUpdateRequested += OnCheckForUpdatesRequested;
             window.SettingsSaved += updatedSettings =>
             {
                 settings = updatedSettings;

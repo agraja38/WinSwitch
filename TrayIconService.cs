@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
 namespace WinSwitch;
@@ -7,6 +8,7 @@ public sealed class TrayIconService : IDisposable
 {
     private readonly NotifyIcon notifyIcon;
     private readonly ContextMenuStrip menu;
+    private readonly Icon appIcon;
 
     public event Action? CheckForUpdatesRequested;
     public event Action? ShowTouchpadHelpRequested;
@@ -21,9 +23,11 @@ public sealed class TrayIconService : IDisposable
         menu.Items.Add("Touchpad setup", null, (_, _) => ShowTouchpadHelpRequested?.Invoke());
         menu.Items.Add("Exit", null, (_, _) => ExitRequested?.Invoke());
 
+        appIcon = LoadAppIcon();
+
         notifyIcon = new NotifyIcon
         {
-            Icon = Icon.ExtractAssociatedIcon(Environment.ProcessPath!) ?? SystemIcons.Application,
+            Icon = appIcon,
             Text = "WinSwitch",
             Visible = false,
             ContextMenuStrip = menu,
@@ -54,6 +58,26 @@ public sealed class TrayIconService : IDisposable
     {
         notifyIcon.Visible = false;
         notifyIcon.Dispose();
+        appIcon.Dispose();
         menu.Dispose();
+    }
+
+    private static Icon LoadAppIcon()
+    {
+        var candidatePaths = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "AppIcon.ico"),
+            Path.Combine(AppContext.BaseDirectory, "assets", "AppIcon.ico"),
+        };
+
+        foreach (var path in candidatePaths)
+        {
+            if (File.Exists(path))
+            {
+                return new Icon(path);
+            }
+        }
+
+        return Icon.ExtractAssociatedIcon(Environment.ProcessPath!) ?? SystemIcons.Application;
     }
 }

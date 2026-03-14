@@ -10,6 +10,7 @@ public sealed class MouseSwipeService : IDisposable
     private bool middleButtonDown;
     private int anchorX;
     private int lastTriggerX;
+    private int triggeredSteps;
     private bool enabled = true;
 
     public event Action<int>? StepRequested;
@@ -43,10 +44,7 @@ public sealed class MouseSwipeService : IDisposable
             return;
         }
 
-        using var currentProcess = Process.GetCurrentProcess();
-        using var currentModule = currentProcess.MainModule;
-        var moduleHandle = NativeMethods.GetModuleHandle(currentModule?.ModuleName);
-        hookHandle = NativeMethods.SetWindowsHookEx(NativeMethods.WH_MOUSE_LL, hookProc, moduleHandle, 0);
+        hookHandle = NativeMethods.SetWindowsHookEx(NativeMethods.WH_MOUSE_LL, hookProc, 0, 0);
 
         if (hookHandle == 0)
         {
@@ -88,6 +86,7 @@ public sealed class MouseSwipeService : IDisposable
                 middleButtonDown = true;
                 anchorX = x;
                 lastTriggerX = x;
+                triggeredSteps = 0;
                 return true;
 
             case NativeMethods.WM_MOUSEMOVE when middleButtonDown:
@@ -99,6 +98,7 @@ public sealed class MouseSwipeService : IDisposable
 
                 var direction = delta > 0 ? 1 : -1;
                 lastTriggerX = x;
+                triggeredSteps++;
                 StepRequested?.Invoke(direction);
                 return true;
 
@@ -116,6 +116,11 @@ public sealed class MouseSwipeService : IDisposable
                 }
                 else
                 {
+                    if (triggeredSteps == 0)
+                    {
+                        StepRequested?.Invoke(x > anchorX ? 1 : -1);
+                    }
+
                     CommitRequested?.Invoke();
                 }
 
