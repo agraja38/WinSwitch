@@ -1,5 +1,5 @@
 #define MyAppName "WinSwitch"
-#define MyAppVersion "1.0.03"
+#define MyAppVersion "1.0.04"
 #define MyAppPublisher "Agraja"
 #define MyAppExeName "WinSwitch.exe"
 
@@ -37,6 +37,7 @@ OutputBaseFilename=WinSwitch-Setup-{#MyInstallerSuffix}
 ArchitecturesAllowed={#MyArchitecturesAllowed}
 ArchitecturesInstallIn64BitMode={#MyArchitecturesInstallMode}
 PrivilegesRequired=lowest
+CloseApplications=yes
 UninstallDisplayIcon={app}\{#MyAppExeName}
 SetupIconFile=..\assets\AppIcon.ico
 

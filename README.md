@@ -4,11 +4,11 @@
 
 Created by Agraja.
 
-## What changed in 1.0.03
+## What changed in 1.0.04
 
-- Launching the app again now opens the existing instance's settings window instead of starting another copy.
-- Removed the middle-button swipe feature.
-- Added `Created by Agraja` branding through the app and installer.
+- Hardened the update flow so WinSwitch releases its global input hooks before installing an update.
+- Updates now run from a tiny external launcher that waits for WinSwitch to exit fully, then restarts it after install.
+- Added installer-side application closing support during update installs.
 
 ## How it works
 
@@ -76,7 +76,7 @@ Generated installers:
 ## Publish a release
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\publish-release.ps1 -Version 1.0.03
+powershell -ExecutionPolicy Bypass -File .\publish-release.ps1 -Version 1.0.04
 ```
 
 ## Notes

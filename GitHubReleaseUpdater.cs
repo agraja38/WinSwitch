@@ -13,7 +13,7 @@ public sealed class GitHubReleaseUpdater
 {
     private static readonly HttpClient HttpClient = CreateHttpClient();
 
-    public async Task CheckForUpdatesAsync(bool showNoUpdateMessage, Action<string, string> onStatusMessage, Action<string> onError)
+    public async Task CheckForUpdatesAsync(bool showNoUpdateMessage, Action<string, string> onStatusMessage, Action<string> onError, Func<Task>? beforeInstall = null)
     {
         if (!UpdateConfiguration.IsConfigured)
         {
@@ -86,11 +86,16 @@ public sealed class GitHubReleaseUpdater
                 await source.CopyToAsync(destination);
             }
 
+            if (beforeInstall is not null)
+            {
+                await beforeInstall();
+            }
+
+            var launcherPath = CreateUpdateLauncher(downloadPath);
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
-                FileName = downloadPath,
+                FileName = launcherPath,
                 UseShellExecute = true,
-                Arguments = "/VERYSILENT /NORESTART",
             });
 
             System.Windows.Application.Current.Shutdown();
@@ -137,6 +142,34 @@ public sealed class GitHubReleaseUpdater
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("WinSwitch", "1.0"));
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         return client;
+    }
+
+    private static string CreateUpdateLauncher(string installerPath)
+    {
+        var launcherPath = Path.Combine(Path.GetTempPath(), $"WinSwitch-Update-{Guid.NewGuid():N}.cmd");
+        var currentProcessId = Environment.ProcessId;
+        var installPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Programs",
+            "WinSwitch",
+            "WinSwitch.exe");
+
+        var script = string.Join(
+            Environment.NewLine,
+            "@echo off",
+            $"set PID={currentProcessId}",
+            ":waitloop",
+            "tasklist /FI \"PID eq %PID%\" | find \"%PID%\" >nul",
+            "if not errorlevel 1 (",
+            "  timeout /t 1 /nobreak >nul",
+            "  goto waitloop",
+            ")",
+            $"start \"\" /wait \"{installerPath}\" /VERYSILENT /NORESTART",
+            $"if exist \"{installPath}\" start \"\" \"{installPath}\"",
+            "del \"%~f0\"");
+
+        File.WriteAllText(launcherPath, script);
+        return launcherPath;
     }
 
     private sealed class GitHubReleaseResponse

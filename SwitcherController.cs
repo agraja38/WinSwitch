@@ -73,7 +73,8 @@ public sealed class SwitcherController : IDisposable
             _ = updater.CheckForUpdatesAsync(
                 showNoUpdateMessage: false,
                 onStatusMessage: trayIconService.ShowBalloonTip,
-                onError: message => trayIconService.ShowBalloonTip("Update check failed", message));
+                onError: message => trayIconService.ShowBalloonTip("Update check failed", message),
+                beforeInstall: PrepareForUpdateAsync);
         }
     }
 
@@ -200,7 +201,8 @@ public sealed class SwitcherController : IDisposable
             await updater.CheckForUpdatesAsync(
                 showNoUpdateMessage: true,
                 onStatusMessage: trayIconService.ShowBalloonTip,
-                onError: message => trayIconService.ShowBalloonTip("Update check failed", message));
+                onError: message => trayIconService.ShowBalloonTip("Update check failed", message),
+                beforeInstall: PrepareForUpdateAsync);
         }
         catch (Exception ex)
         {
@@ -283,6 +285,26 @@ public sealed class SwitcherController : IDisposable
         keyboardHookService.Enabled = updatedSettings.EnableAltTab;
         touchpadHotkeyService.Enabled = updatedSettings.EnableTouchpadSwipe;
         swipeCommitTimer.Interval = TimeSpan.FromMilliseconds(updatedSettings.SwipeCommitDelayMs);
+    }
+
+    private Task PrepareForUpdateAsync()
+    {
+        return dispatcher.InvokeAsync(() =>
+        {
+            swipeCommitTimer.Stop();
+            ResetSwitcher();
+
+            if (settingsWindow is not null)
+            {
+                settingsWindow.Close();
+                settingsWindow = null;
+            }
+
+            keyboardHookService.Enabled = false;
+            touchpadHotkeyService.Enabled = false;
+            keyboardHookService.Dispose();
+            touchpadHotkeyService.Dispose();
+        }).Task;
     }
 
     private static int Wrap(int value, int count)

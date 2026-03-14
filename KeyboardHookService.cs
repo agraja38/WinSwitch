@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace WinSwitch;
@@ -43,10 +42,7 @@ public sealed class KeyboardHookService : IDisposable
             return;
         }
 
-        using var currentProcess = Process.GetCurrentProcess();
-        using var currentModule = currentProcess.MainModule;
-        var moduleHandle = NativeMethods.GetModuleHandle(currentModule?.ModuleName);
-        hookHandle = NativeMethods.SetWindowsHookEx(NativeMethods.WH_KEYBOARD_LL, hookProc, moduleHandle, 0);
+        hookHandle = NativeMethods.SetWindowsHookEx(NativeMethods.WH_KEYBOARD_LL, hookProc, 0, 0);
 
         if (hookHandle == 0)
         {
@@ -56,6 +52,12 @@ public sealed class KeyboardHookService : IDisposable
 
     public void Dispose()
     {
+        sequenceActive = false;
+        leftAltDown = false;
+        rightAltDown = false;
+        leftShiftDown = false;
+        rightShiftDown = false;
+
         if (hookHandle != 0)
         {
             NativeMethods.UnhookWindowsHookEx(hookHandle);
