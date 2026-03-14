@@ -4,15 +4,16 @@
 
 Created by Agraja.
 
-## What changed in 1.0.07
+## What changed in 1.0.08
 
-- Fixed `Alt+Tab` modifier tracking for keyboards that report generic `VK_MENU` and `VK_SHIFT` codes.
-- Kept the non-blocking hook path and safer update shutdown/restart flow.
+- Replaced the failing `Alt+Tab` path with `Ctrl+Alt+Left` and `Ctrl+Alt+Right` keyboard shortcuts.
+- Added an update progress UI for download and install, plus a completion message after install finishes.
+- Kept the safer update shutdown/restart flow.
 
 ## How it works
 
-- `Alt+Tab` and `Shift+Alt+Tab` can be intercepted by WinSwitch.
-- Three-finger touchpad swipes work after mapping Windows advanced gestures to `Ctrl+Alt+Left` and `Ctrl+Alt+Right`.
+- `Ctrl+Alt+Left` and `Ctrl+Alt+Right` switch apps from the keyboard.
+- Three-finger touchpad swipes work after mapping Windows advanced gestures to the same shortcuts.
 - When both the current app and target app cover the full display, WinSwitch animates a fullscreen slide between them.
 - If fullscreen mode is required in settings and either app is not fullscreen-like, WinSwitch falls back to a direct switch without the animation.
 
@@ -22,7 +23,7 @@ Open the tray icon and click `Settings`.
 
 Users can configure:
 
-- whether `Alt+Tab` is intercepted
+- whether keyboard shortcuts are enabled
 - whether mapped touchpad swipes are enabled
 - whether fullscreen-only animation is required
 - swipe commit delay
@@ -80,7 +81,7 @@ Generated installers:
 ## Publish a release
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\publish-release.ps1 -Version 1.0.07
+powershell -ExecutionPolicy Bypass -File .\publish-release.ps1 -Version 1.0.08
 ```
 
 ## Notes

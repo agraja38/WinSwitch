@@ -4,7 +4,6 @@ namespace WinSwitch;
 
 public sealed class SwitcherController : IDisposable
 {
-    private readonly KeyboardHookService keyboardHookService;
     private readonly TouchpadHotkeyService touchpadHotkeyService;
     private readonly WindowEnumerationService windowEnumerationService;
     private readonly ForegroundHistoryService foregroundHistoryService;
@@ -12,6 +11,7 @@ public sealed class SwitcherController : IDisposable
     private readonly GitHubReleaseUpdater updater;
     private readonly SettingsService settingsService;
     private readonly FullscreenTransitionService fullscreenTransitionService;
+    private readonly UpdateProgressWindow updateProgressWindow;
     private readonly Dispatcher dispatcher;
     private readonly DispatcherTimer swipeCommitTimer;
 
@@ -30,19 +30,16 @@ public sealed class SwitcherController : IDisposable
 
         windowEnumerationService = new WindowEnumerationService();
         foregroundHistoryService = new ForegroundHistoryService(windowEnumerationService.IsCandidateWindowHandle);
-        keyboardHookService = new KeyboardHookService();
         touchpadHotkeyService = new TouchpadHotkeyService();
         trayIconService = new TrayIconService();
         updater = new GitHubReleaseUpdater();
         fullscreenTransitionService = new FullscreenTransitionService();
+        updateProgressWindow = new UpdateProgressWindow();
         swipeCommitTimer = new DispatcherTimer(DispatcherPriority.Background, dispatcher)
         {
             Interval = TimeSpan.FromMilliseconds(settings.SwipeCommitDelayMs),
         };
 
-        keyboardHookService.StepRequested += OnStepRequested;
-        keyboardHookService.CommitRequested += OnCommitRequested;
-        keyboardHookService.CancelRequested += OnCancelRequested;
         touchpadHotkeyService.StepRequested += OnSwipeRequested;
         trayIconService.ShowSettingsRequested += OnShowSettingsRequested;
         trayIconService.CheckForUpdatesRequested += OnCheckForUpdatesRequested;
@@ -56,7 +53,6 @@ public sealed class SwitcherController : IDisposable
     public void Start()
     {
         foregroundHistoryService.Start();
-        keyboardHookService.Start();
         trayIconService.Start();
 
         try
@@ -65,7 +61,7 @@ public sealed class SwitcherController : IDisposable
         }
         catch (Exception ex)
         {
-            trayIconService.ShowBalloonTip("Touchpad hotkeys unavailable", ex.Message);
+            trayIconService.ShowBalloonTip("Shortcut hotkeys unavailable", ex.Message);
         }
 
         if (settings.CheckForUpdatesOnLaunch)
@@ -74,15 +70,13 @@ public sealed class SwitcherController : IDisposable
                 showNoUpdateMessage: false,
                 onStatusMessage: trayIconService.ShowBalloonTip,
                 onError: message => trayIconService.ShowBalloonTip("Update check failed", message),
+                onProgress: ShowUpdateProgress,
                 beforeInstall: PrepareForUpdateAsync);
         }
     }
 
     public void Dispose()
     {
-        keyboardHookService.StepRequested -= OnStepRequested;
-        keyboardHookService.CommitRequested -= OnCommitRequested;
-        keyboardHookService.CancelRequested -= OnCancelRequested;
         touchpadHotkeyService.StepRequested -= OnSwipeRequested;
         trayIconService.ShowSettingsRequested -= OnShowSettingsRequested;
         trayIconService.CheckForUpdatesRequested -= OnCheckForUpdatesRequested;
@@ -90,14 +84,14 @@ public sealed class SwitcherController : IDisposable
         trayIconService.ExitRequested -= OnExitRequested;
         swipeCommitTimer.Tick -= OnSwipeCommitTimerTick;
 
-        keyboardHookService.Dispose();
         touchpadHotkeyService.Dispose();
         trayIconService.Dispose();
         fullscreenTransitionService.Dispose();
+        updateProgressWindow.Close();
         foregroundHistoryService.Dispose();
     }
 
-    private void OnStepRequested(int direction)
+    private void OnSwipeRequested(int direction)
     {
         dispatcher.BeginInvoke(() =>
         {
@@ -119,19 +113,10 @@ public sealed class SwitcherController : IDisposable
 
             lastDirection = direction >= 0 ? 1 : -1;
             UpdateSelection();
-        }, DispatcherPriority.Send);
-    }
-
-    private void OnSwipeRequested(int direction)
-    {
-        OnStepRequested(direction);
-
-        dispatcher.BeginInvoke(() =>
-        {
             swipeCommitTimer.Stop();
             swipeCommitTimer.Interval = TimeSpan.FromMilliseconds(settings.SwipeCommitDelayMs);
             swipeCommitTimer.Start();
-        }, DispatcherPriority.Background);
+        }, DispatcherPriority.Send);
     }
 
     private async void OnCommitRequested()
@@ -185,15 +170,6 @@ public sealed class SwitcherController : IDisposable
         foregroundHistoryService.RecordProcess(selectedApp.ProcessId);
     }
 
-    private void OnCancelRequested()
-    {
-        dispatcher.BeginInvoke(() =>
-        {
-            swipeCommitTimer.Stop();
-            ResetSwitcher();
-        }, DispatcherPriority.Send);
-    }
-
     private async void OnCheckForUpdatesRequested()
     {
         try
@@ -202,6 +178,7 @@ public sealed class SwitcherController : IDisposable
                 showNoUpdateMessage: true,
                 onStatusMessage: trayIconService.ShowBalloonTip,
                 onError: message => trayIconService.ShowBalloonTip("Update check failed", message),
+                onProgress: ShowUpdateProgress,
                 beforeInstall: PrepareForUpdateAsync);
         }
         catch (Exception ex)
@@ -213,9 +190,9 @@ public sealed class SwitcherController : IDisposable
     private void OnShowTouchpadHelpRequested()
     {
         const string message =
-            "Open Windows Settings > Bluetooth & devices > Touchpad > Advanced gestures and map three-finger left/right to Ctrl+Alt+Left and Ctrl+Alt+Right.";
+            "Use Ctrl+Alt+Left and Ctrl+Alt+Right for keyboard switching. In Windows touchpad advanced gestures, map three-finger left/right to the same shortcuts.";
 
-        trayIconService.ShowMessage("Touchpad setup - Created by Agraja", message);
+        trayIconService.ShowMessage("Shortcuts - Created by Agraja", message);
     }
 
     private void OnShowSettingsRequested()
@@ -282,8 +259,7 @@ public sealed class SwitcherController : IDisposable
 
     private void ApplySettings(AppSettings updatedSettings)
     {
-        keyboardHookService.Enabled = updatedSettings.EnableAltTab;
-        touchpadHotkeyService.Enabled = updatedSettings.EnableTouchpadSwipe;
+        touchpadHotkeyService.Enabled = updatedSettings.EnableKeyboardShortcuts || updatedSettings.EnableTouchpadSwipe;
         swipeCommitTimer.Interval = TimeSpan.FromMilliseconds(updatedSettings.SwipeCommitDelayMs);
     }
 
@@ -300,11 +276,33 @@ public sealed class SwitcherController : IDisposable
                 settingsWindow = null;
             }
 
-            keyboardHookService.Enabled = false;
             touchpadHotkeyService.Enabled = false;
-            keyboardHookService.Dispose();
             touchpadHotkeyService.Dispose();
+            updateProgressWindow.ShowIndeterminate("Installing update...");
         }).Task;
+    }
+
+    private void ShowUpdateProgress(string status, double? percent, bool isIndeterminate)
+    {
+        dispatcher.BeginInvoke(() =>
+        {
+            if (!updateProgressWindow.IsVisible)
+            {
+                updateProgressWindow.Show();
+            }
+
+            updateProgressWindow.WindowState = System.Windows.WindowState.Normal;
+            updateProgressWindow.Activate();
+
+            if (isIndeterminate)
+            {
+                updateProgressWindow.ShowIndeterminate(status);
+            }
+            else
+            {
+                updateProgressWindow.ShowProgress(status, percent ?? 0);
+            }
+        }, DispatcherPriority.Background);
     }
 
     private static int Wrap(int value, int count)

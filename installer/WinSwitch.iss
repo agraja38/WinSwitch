@@ -1,5 +1,5 @@
 #define MyAppName "WinSwitch"
-#define MyAppVersion "1.0.07"
+#define MyAppVersion "1.0.08"
 #define MyAppPublisher "Agraja"
 #define MyAppExeName "WinSwitch.exe"
 

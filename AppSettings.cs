@@ -2,7 +2,7 @@ namespace WinSwitch;
 
 public sealed class AppSettings
 {
-    public bool EnableAltTab { get; set; } = true;
+    public bool EnableKeyboardShortcuts { get; set; } = true;
     public bool EnableTouchpadSwipe { get; set; } = true;
     public bool RequireFullscreenForSwipe { get; set; } = true;
     public bool CheckForUpdatesOnLaunch { get; set; } = true;

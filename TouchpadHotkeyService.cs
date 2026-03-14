@@ -19,6 +19,12 @@ public sealed class TouchpadHotkeyService : IDisposable
         set => enabled = value;
     }
 
+    public bool EnableKeyboardShortcuts
+    {
+        get => enabled;
+        set => enabled = value;
+    }
+
     public TouchpadHotkeyService()
     {
         var parameters = new HwndSourceParameters("WinSwitchTouchpadHotkeys")

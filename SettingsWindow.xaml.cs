@@ -24,7 +24,7 @@ public partial class SettingsWindow : Window
 
     public void LoadSettings(AppSettings settings)
     {
-        AltTabCheckBox.IsChecked = settings.EnableAltTab;
+        AltTabCheckBox.IsChecked = settings.EnableKeyboardShortcuts;
         TouchpadSwipeCheckBox.IsChecked = settings.EnableTouchpadSwipe;
         RequireFullscreenCheckBox.IsChecked = settings.RequireFullscreenForSwipe;
         CheckForUpdatesCheckBox.IsChecked = settings.CheckForUpdatesOnLaunch;
@@ -36,7 +36,7 @@ public partial class SettingsWindow : Window
     {
         var settings = new AppSettings
         {
-            EnableAltTab = AltTabCheckBox.IsChecked == true,
+            EnableKeyboardShortcuts = AltTabCheckBox.IsChecked == true,
             EnableTouchpadSwipe = TouchpadSwipeCheckBox.IsChecked == true,
             RequireFullscreenForSwipe = RequireFullscreenCheckBox.IsChecked == true,
             CheckForUpdatesOnLaunch = CheckForUpdatesCheckBox.IsChecked == true,

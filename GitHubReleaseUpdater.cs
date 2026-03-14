@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Windows;
 
 namespace WinSwitch;
 
@@ -13,7 +12,12 @@ public sealed class GitHubReleaseUpdater
 {
     private static readonly HttpClient HttpClient = CreateHttpClient();
 
-    public async Task CheckForUpdatesAsync(bool showNoUpdateMessage, Action<string, string> onStatusMessage, Action<string> onError, Func<Task>? beforeInstall = null)
+    public async Task CheckForUpdatesAsync(
+        bool showNoUpdateMessage,
+        Action<string, string> onStatusMessage,
+        Action<string> onError,
+        Action<string, double?, bool>? onProgress = null,
+        Func<Task>? beforeInstall = null)
     {
         if (!UpdateConfiguration.IsConfigured)
         {
@@ -69,21 +73,44 @@ public sealed class GitHubReleaseUpdater
             var result = System.Windows.MessageBox.Show(
                 $"WinSwitch {latestVersion} is available. Download and install it now?",
                 "Update available",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Information);
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Information);
 
-            if (result != MessageBoxResult.Yes)
+            if (result != System.Windows.MessageBoxResult.Yes)
             {
                 return;
             }
 
             onStatusMessage("Downloading update", $"Downloading {asset.Name} from GitHub Releases.");
-            var downloadPath = Path.Combine(Path.GetTempPath(), asset.Name);
+            onProgress?.Invoke("Downloading update...", 0, false);
 
-            await using (var source = await HttpClient.GetStreamAsync(asset.BrowserDownloadUrl))
+            var downloadPath = Path.Combine(Path.GetTempPath(), asset.Name);
+            using var response = await HttpClient.GetAsync(asset.BrowserDownloadUrl, HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+
+            var totalBytes = response.Content.Headers.ContentLength;
+            await using (var source = await response.Content.ReadAsStreamAsync())
             await using (var destination = File.Create(downloadPath))
             {
-                await source.CopyToAsync(destination);
+                var buffer = new byte[81920];
+                long totalRead = 0;
+                int read;
+
+                while ((read = await source.ReadAsync(buffer.AsMemory(0, buffer.Length))) > 0)
+                {
+                    await destination.WriteAsync(buffer.AsMemory(0, read));
+                    totalRead += read;
+
+                    if (totalBytes.HasValue && totalBytes.Value > 0)
+                    {
+                        var percent = totalRead * 100d / totalBytes.Value;
+                        onProgress?.Invoke($"Downloading update... {percent:0}%", percent, false);
+                    }
+                    else
+                    {
+                        onProgress?.Invoke("Downloading update...", null, true);
+                    }
+                }
             }
 
             if (beforeInstall is not null)
@@ -91,11 +118,13 @@ public sealed class GitHubReleaseUpdater
                 await beforeInstall();
             }
 
+            onProgress?.Invoke("Installing update...", null, true);
             var launcherPath = CreateUpdateLauncher(downloadPath);
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
-                FileName = launcherPath,
+                FileName = "powershell.exe",
                 UseShellExecute = true,
+                Arguments = $"-NoProfile -ExecutionPolicy Bypass -STA -File \"{launcherPath}\"",
             });
 
             System.Windows.Application.Current.Shutdown();
@@ -146,7 +175,7 @@ public sealed class GitHubReleaseUpdater
 
     private static string CreateUpdateLauncher(string installerPath)
     {
-        var launcherPath = Path.Combine(Path.GetTempPath(), $"WinSwitch-Update-{Guid.NewGuid():N}.cmd");
+        var launcherPath = Path.Combine(Path.GetTempPath(), $"WinSwitch-Update-{Guid.NewGuid():N}.ps1");
         var currentProcessId = Environment.ProcessId;
         var installPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -156,17 +185,51 @@ public sealed class GitHubReleaseUpdater
 
         var script = string.Join(
             Environment.NewLine,
-            "@echo off",
-            $"set PID={currentProcessId}",
-            ":waitloop",
-            "tasklist /FI \"PID eq %PID%\" | find \"%PID%\" >nul",
-            "if not errorlevel 1 (",
-            "  timeout /t 1 /nobreak >nul",
-            "  goto waitloop",
-            ")",
-            $"start \"\" /wait \"{installerPath}\" /VERYSILENT /NORESTART",
-            $"if exist \"{installPath}\" start \"\" \"{installPath}\"",
-            "del \"%~f0\"");
+            "Add-Type -AssemblyName System.Windows.Forms",
+            "Add-Type -AssemblyName System.Drawing",
+            "$form = New-Object System.Windows.Forms.Form",
+            "$form.Text = 'WinSwitch Update'",
+            "$form.Width = 420",
+            "$form.Height = 150",
+            "$form.StartPosition = 'CenterScreen'",
+            "$form.TopMost = $true",
+            "$form.FormBorderStyle = 'FixedDialog'",
+            "$form.MaximizeBox = $false",
+            "$form.MinimizeBox = $false",
+            "$label = New-Object System.Windows.Forms.Label",
+            "$label.Text = 'Installing WinSwitch update...'",
+            "$label.AutoSize = $false",
+            "$label.Width = 360",
+            "$label.Height = 24",
+            "$label.Left = 20",
+            "$label.Top = 20",
+            "$progress = New-Object System.Windows.Forms.ProgressBar",
+            "$progress.Style = 'Marquee'",
+            "$progress.MarqueeAnimationSpeed = 30",
+            "$progress.Width = 360",
+            "$progress.Height = 20",
+            "$progress.Left = 20",
+            "$progress.Top = 60",
+            "$form.Controls.Add($label)",
+            "$form.Controls.Add($progress)",
+            "$worker = New-Object System.ComponentModel.BackgroundWorker",
+            "$worker.DoWork += {",
+            $"  while (Get-Process -Id {currentProcessId} -ErrorAction SilentlyContinue) {{ Start-Sleep -Seconds 1 }}",
+            $"  $process = Start-Process -FilePath '{installerPath}' -ArgumentList '/VERYSILENT /NORESTART' -PassThru -Wait",
+            "  $_.Result = $process.ExitCode",
+            "}",
+            "$worker.RunWorkerCompleted += {",
+            "  $form.Close()",
+            "  if ($_.Result -eq 0) {",
+            $"    if (Test-Path '{installPath}') {{ Start-Process -FilePath '{installPath}' }}",
+            "    [System.Windows.Forms.MessageBox]::Show('WinSwitch update complete.', 'WinSwitch', 'OK', 'Information') | Out-Null",
+            "  } else {",
+            "    [System.Windows.Forms.MessageBox]::Show('WinSwitch update failed.', 'WinSwitch', 'OK', 'Error') | Out-Null",
+            "  }",
+            $"  Remove-Item -LiteralPath '{launcherPath}' -Force -ErrorAction SilentlyContinue",
+            "}",
+            "$form.Add_Shown({ $worker.RunWorkerAsync() })",
+            "[void]$form.ShowDialog()");
 
         File.WriteAllText(launcherPath, script);
         return launcherPath;
