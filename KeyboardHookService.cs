@@ -12,10 +12,24 @@ public sealed class KeyboardHookService : IDisposable
     private bool leftShiftDown;
     private bool rightShiftDown;
     private bool sequenceActive;
+    private bool enabled = true;
 
     public event Action<int>? StepRequested;
     public event Action? CommitRequested;
     public event Action? CancelRequested;
+
+    public bool Enabled
+    {
+        get => enabled;
+        set
+        {
+            enabled = value;
+            if (!enabled)
+            {
+                sequenceActive = false;
+            }
+        }
+    }
 
     public KeyboardHookService()
     {
@@ -63,6 +77,11 @@ public sealed class KeyboardHookService : IDisposable
 
     private bool HandleKeyMessage(uint message, int virtualKey)
     {
+        if (!Enabled)
+        {
+            return false;
+        }
+
         var isDown = message is NativeMethods.WM_KEYDOWN or NativeMethods.WM_SYSKEYDOWN;
         var isUp = message is NativeMethods.WM_KEYUP or NativeMethods.WM_SYSKEYUP;
 

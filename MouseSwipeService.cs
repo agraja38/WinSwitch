@@ -5,17 +5,31 @@ namespace WinSwitch;
 
 public sealed class MouseSwipeService : IDisposable
 {
-    private const int SwipeThresholdPixels = 110;
-
     private readonly NativeMethods.LowLevelMouseProc hookProc;
     private nint hookHandle;
     private bool middleButtonDown;
     private int anchorX;
     private int lastTriggerX;
+    private bool enabled = true;
 
     public event Action<int>? StepRequested;
     public event Action? CommitRequested;
     public event Action? CancelRequested;
+
+    public bool Enabled
+    {
+        get => enabled;
+        set
+        {
+            enabled = value;
+            if (!enabled)
+            {
+                middleButtonDown = false;
+            }
+        }
+    }
+
+    public int SwipeThresholdPixels { get; set; } = 110;
 
     public MouseSwipeService()
     {
@@ -63,6 +77,11 @@ public sealed class MouseSwipeService : IDisposable
 
     private bool HandleMouseMessage(uint message, int x)
     {
+        if (!Enabled)
+        {
+            return false;
+        }
+
         switch (message)
         {
             case NativeMethods.WM_MBUTTONDOWN:

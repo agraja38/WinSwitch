@@ -79,7 +79,7 @@ public sealed class WindowEnumerationService
 
     public void ActivateApp(SwitchableApp app)
     {
-        var targetHandle = FindBestWindowForProcess(app.ProcessId) ?? app.WindowHandle;
+        var targetHandle = ResolveTargetHandle(app);
         if (targetHandle == 0)
         {
             return;
@@ -120,6 +120,11 @@ public sealed class WindowEnumerationService
                 NativeMethods.AttachThreadInput(targetThread, foregroundThread, false);
             }
         }
+    }
+
+    public nint ResolveTargetHandle(SwitchableApp app)
+    {
+        return FindBestWindowForProcess(app.ProcessId) ?? app.WindowHandle;
     }
 
     private SwitchableApp? CreateApp(nint windowHandle, int processId)

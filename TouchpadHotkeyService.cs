@@ -9,8 +9,15 @@ public sealed class TouchpadHotkeyService : IDisposable
 
     private readonly HwndSource hwndSource;
     private bool registered;
+    private bool enabled = true;
 
     public event Action<int>? StepRequested;
+
+    public bool Enabled
+    {
+        get => enabled;
+        set => enabled = value;
+    }
 
     public TouchpadHotkeyService()
     {
@@ -83,6 +90,11 @@ public sealed class TouchpadHotkeyService : IDisposable
         }
 
         var id = wParam.ToInt32();
+        if (!Enabled)
+        {
+            return 0;
+        }
+
         if (id == PreviousHotkeyId)
         {
             StepRequested?.Invoke(-1);

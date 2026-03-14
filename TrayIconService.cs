@@ -10,11 +10,13 @@ public sealed class TrayIconService : IDisposable
 
     public event Action? CheckForUpdatesRequested;
     public event Action? ShowTouchpadHelpRequested;
+    public event Action? ShowSettingsRequested;
     public event Action? ExitRequested;
 
     public TrayIconService()
     {
         menu = new ContextMenuStrip();
+        menu.Items.Add("Settings", null, (_, _) => ShowSettingsRequested?.Invoke());
         menu.Items.Add("Check for updates", null, (_, _) => CheckForUpdatesRequested?.Invoke());
         menu.Items.Add("Touchpad setup", null, (_, _) => ShowTouchpadHelpRequested?.Invoke());
         menu.Items.Add("Exit", null, (_, _) => ExitRequested?.Invoke());
@@ -27,7 +29,7 @@ public sealed class TrayIconService : IDisposable
             ContextMenuStrip = menu,
         };
 
-        notifyIcon.DoubleClick += (_, _) => ShowTouchpadHelpRequested?.Invoke();
+        notifyIcon.DoubleClick += (_, _) => ShowSettingsRequested?.Invoke();
     }
 
     public void Start()

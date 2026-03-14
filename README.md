@@ -1,45 +1,55 @@
 # WinSwitch
 
-`WinSwitch` is a Windows desktop app switcher that aims to feel closer to the macOS app-switching gesture flow than the stock Windows `Alt+Tab`.
+`WinSwitch` is a Windows app switcher built to feel closer to the macOS fullscreen swipe gesture.
 
-## Features
+## What changed in 1.0.01
 
-- Runs in the background with a tray icon.
-- Replaces the standard `Alt+Tab` flow with a centered app switcher overlay.
-- Switches by app/process, so grouped windows behave more like macOS app entries.
-- Supports `Alt+Tab` / `Shift+Alt+Tab`.
-- Supports holding the mouse middle button and swiping left or right.
-- Supports three-finger touchpad swipes after mapping Windows advanced gestures to hotkeys.
-- Checks GitHub Releases for updates and installs the newest matching installer.
+- Replaced the old card overlay with a fullscreen swipe transition.
+- Added a settings window so users can configure gestures, timing, and update checks.
+- Added GitHub-release updates for `agraja38/WinSwitch`.
+
+## How it works
+
+- `Alt+Tab` and `Shift+Alt+Tab` can be intercepted by WinSwitch.
+- Holding the mouse middle button and swiping horizontally can switch apps.
+- Three-finger touchpad swipes work after mapping Windows advanced gestures to `Ctrl+Alt+Left` and `Ctrl+Alt+Right`.
+- When both the current app and target app cover the full display, WinSwitch animates a fullscreen slide between them.
+- If fullscreen mode is required in settings and either app is not fullscreen-like, WinSwitch falls back to a direct switch without the animation.
+
+## Settings GUI
+
+Open the tray icon and click `Settings`.
+
+Users can configure:
+
+- whether `Alt+Tab` is intercepted
+- whether middle-button swipes are enabled
+- whether mapped touchpad swipes are enabled
+- whether fullscreen-only animation is required
+- mouse swipe sensitivity
+- swipe commit delay
+- animation duration
+- update checks on launch
 
 ## Touchpad setup
 
-Windows does not reliably expose raw global three-finger precision-touchpad swipes directly to third-party desktop apps. The supported path is to map those gestures to custom shortcuts and let WinSwitch respond to them.
+Windows does not expose raw global three-finger touchpad swipes to desktop apps in a reliable way, so WinSwitch uses the Windows-supported hotkey mapping route.
 
 1. Open `Settings > Bluetooth & devices > Touchpad > Advanced gestures`.
-2. Set the three-finger swipe left gesture to `Ctrl+Alt+Left`.
-3. Set the three-finger swipe right gesture to `Ctrl+Alt+Right`.
+2. Map three-finger swipe left to `Ctrl+Alt+Left`.
+3. Map three-finger swipe right to `Ctrl+Alt+Right`.
 4. Start WinSwitch.
-
-Each swipe advances the macOS-style overlay, and WinSwitch commits the highlighted app automatically after a short pause.
 
 ## Updates
 
-WinSwitch can update itself from GitHub Releases.
-
-1. Open `UpdateConfiguration.cs`.
-2. Replace `YOUR_GITHUB_USERNAME` with your GitHub username or organization.
-3. Keep the repository name in sync with the repo you publish.
-4. Build the installer and publish GitHub releases with version tags like `v0.2.0`.
-
-At runtime, WinSwitch looks for:
+WinSwitch checks [GitHub Releases](https://github.com/agraja38/WinSwitch/releases) and downloads:
 
 - `WinSwitch-Setup-x64.exe`
 - `WinSwitch-Setup-ARM64.exe`
 
-in the latest GitHub release and downloads the correct one for the current machine.
+The repo owner and name are already configured in [UpdateConfiguration.cs](C:/Users/agraj/iCloudDrive/Codex/WinSwitch/UpdateConfiguration.cs).
 
-## Build on Windows
+## Build
 
 Requirements:
 
@@ -56,31 +66,21 @@ dotnet run
 ## Build installers
 
 ```powershell
-.\build-installer.ps1
+powershell -ExecutionPolicy Bypass -File .\build-installer.ps1
 ```
 
-Installers are written to:
+Generated installers:
 
 - `installer\output\WinSwitch-Setup-x64.exe`
 - `installer\output\WinSwitch-Setup-ARM64.exe`
 
 ## Publish a release
 
-If `git` and GitHub CLI (`gh`) are installed and authenticated:
-
 ```powershell
-.\publish-release.ps1 -Version 0.2.0
+powershell -ExecutionPolicy Bypass -File .\publish-release.ps1 -Version 1.0.01
 ```
-
-That script will:
-
-1. Build the installers.
-2. Commit the current repo state.
-3. Create a `v0.2.0` git tag.
-4. Push the branch and tag.
-5. Create a GitHub release and upload both installer assets.
 
 ## Notes
 
-- The app targets `net8.0-windows` and uses WPF plus Win32 interop, so it must be built on Windows.
-- The middle-button gesture is intentionally captured globally while the button is held so the swipe feels dedicated to switching.
+- The fullscreen swipe is an app-level visual transition, not a true Windows virtual-desktop compositor feature. That means it can closely mimic the macOS feel for fullscreen apps, but Windows still controls the real windows underneath.
+- The project targets `net8.0-windows` and must be built on Windows.
