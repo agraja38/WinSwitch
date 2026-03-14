@@ -5,7 +5,6 @@ namespace WinSwitch;
 public sealed class SwitcherController : IDisposable
 {
     private readonly KeyboardHookService keyboardHookService;
-    private readonly MouseSwipeService mouseSwipeService;
     private readonly TouchpadHotkeyService touchpadHotkeyService;
     private readonly WindowEnumerationService windowEnumerationService;
     private readonly ForegroundHistoryService foregroundHistoryService;
@@ -17,6 +16,7 @@ public sealed class SwitcherController : IDisposable
     private readonly DispatcherTimer swipeCommitTimer;
 
     private AppSettings settings;
+    private SettingsWindow? settingsWindow;
     private IReadOnlyList<SwitchableApp> currentApps = Array.Empty<SwitchableApp>();
     private int selectedIndex = -1;
     private bool isSwitching;
@@ -31,7 +31,6 @@ public sealed class SwitcherController : IDisposable
         windowEnumerationService = new WindowEnumerationService();
         foregroundHistoryService = new ForegroundHistoryService(windowEnumerationService.IsCandidateWindowHandle);
         keyboardHookService = new KeyboardHookService();
-        mouseSwipeService = new MouseSwipeService();
         touchpadHotkeyService = new TouchpadHotkeyService();
         trayIconService = new TrayIconService();
         updater = new GitHubReleaseUpdater();
@@ -44,9 +43,6 @@ public sealed class SwitcherController : IDisposable
         keyboardHookService.StepRequested += OnStepRequested;
         keyboardHookService.CommitRequested += OnCommitRequested;
         keyboardHookService.CancelRequested += OnCancelRequested;
-        mouseSwipeService.StepRequested += OnStepRequested;
-        mouseSwipeService.CommitRequested += OnCommitRequested;
-        mouseSwipeService.CancelRequested += OnCancelRequested;
         touchpadHotkeyService.StepRequested += OnSwipeRequested;
         trayIconService.ShowSettingsRequested += OnShowSettingsRequested;
         trayIconService.CheckForUpdatesRequested += OnCheckForUpdatesRequested;
@@ -61,7 +57,6 @@ public sealed class SwitcherController : IDisposable
     {
         foregroundHistoryService.Start();
         keyboardHookService.Start();
-        mouseSwipeService.Start();
         trayIconService.Start();
 
         try
@@ -87,9 +82,6 @@ public sealed class SwitcherController : IDisposable
         keyboardHookService.StepRequested -= OnStepRequested;
         keyboardHookService.CommitRequested -= OnCommitRequested;
         keyboardHookService.CancelRequested -= OnCancelRequested;
-        mouseSwipeService.StepRequested -= OnStepRequested;
-        mouseSwipeService.CommitRequested -= OnCommitRequested;
-        mouseSwipeService.CancelRequested -= OnCancelRequested;
         touchpadHotkeyService.StepRequested -= OnSwipeRequested;
         trayIconService.ShowSettingsRequested -= OnShowSettingsRequested;
         trayIconService.CheckForUpdatesRequested -= OnCheckForUpdatesRequested;
@@ -98,7 +90,6 @@ public sealed class SwitcherController : IDisposable
         swipeCommitTimer.Tick -= OnSwipeCommitTimerTick;
 
         keyboardHookService.Dispose();
-        mouseSwipeService.Dispose();
         touchpadHotkeyService.Dispose();
         trayIconService.Dispose();
         fullscreenTransitionService.Dispose();
@@ -222,24 +213,43 @@ public sealed class SwitcherController : IDisposable
         const string message =
             "Open Windows Settings > Bluetooth & devices > Touchpad > Advanced gestures and map three-finger left/right to Ctrl+Alt+Left and Ctrl+Alt+Right.";
 
-        trayIconService.ShowMessage("Touchpad setup", message);
+        trayIconService.ShowMessage("Touchpad setup - Created by Agraja", message);
     }
 
     private void OnShowSettingsRequested()
     {
         dispatcher.Invoke(() =>
         {
-            var window = new SettingsWindow(settingsService);
-            window.LoadSettings(settings);
-            window.ManualUpdateRequested += OnCheckForUpdatesRequested;
-            window.SettingsSaved += updatedSettings =>
+            if (settingsWindow is not null)
+            {
+                if (!settingsWindow.IsVisible)
+                {
+                    settingsWindow.Show();
+                }
+
+                settingsWindow.WindowState = System.Windows.WindowState.Normal;
+                settingsWindow.Activate();
+                return;
+            }
+
+            settingsWindow = new SettingsWindow(settingsService);
+            settingsWindow.LoadSettings(settings);
+            settingsWindow.ManualUpdateRequested += OnCheckForUpdatesRequested;
+            settingsWindow.SettingsSaved += updatedSettings =>
             {
                 settings = updatedSettings;
                 ApplySettings(updatedSettings);
-                trayIconService.ShowBalloonTip("Settings saved", "WinSwitch updated your preferences.");
+                trayIconService.ShowBalloonTip("Settings saved", "WinSwitch updated your preferences. Created by Agraja.");
             };
-            window.ShowDialog();
+            settingsWindow.Closed += (_, _) => settingsWindow = null;
+            settingsWindow.Show();
+            settingsWindow.Activate();
         });
+    }
+
+    public void ShowSettings()
+    {
+        OnShowSettingsRequested();
     }
 
     private void OnExitRequested()
@@ -271,8 +281,6 @@ public sealed class SwitcherController : IDisposable
     private void ApplySettings(AppSettings updatedSettings)
     {
         keyboardHookService.Enabled = updatedSettings.EnableAltTab;
-        mouseSwipeService.Enabled = updatedSettings.EnableMouseSwipe;
-        mouseSwipeService.SwipeThresholdPixels = updatedSettings.MouseSwipeThreshold;
         touchpadHotkeyService.Enabled = updatedSettings.EnableTouchpadSwipe;
         swipeCommitTimer.Interval = TimeSpan.FromMilliseconds(updatedSettings.SwipeCommitDelayMs);
     }

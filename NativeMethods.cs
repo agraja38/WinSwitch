@@ -4,7 +4,6 @@ namespace WinSwitch;
 internal static class NativeMethods
 {
     public const int WH_KEYBOARD_LL = 13;
-    public const int WH_MOUSE_LL = 14;
 
     public const uint WM_KEYDOWN = 0x0100;
     public const uint WM_KEYUP = 0x0101;
@@ -24,10 +23,6 @@ internal static class NativeMethods
     public const uint MOD_ALT = 0x0001;
     public const uint MOD_CONTROL = 0x0002;
 
-    public const uint WM_MBUTTONDOWN = 0x0207;
-    public const uint WM_MBUTTONUP = 0x0208;
-    public const uint WM_MOUSEMOVE = 0x0200;
-
     public const int GWL_EXSTYLE = -20;
     public const long WS_EX_TOOLWINDOW = 0x00000080L;
     public const uint GW_OWNER = 4;
@@ -46,7 +41,6 @@ internal static class NativeMethods
 
     public delegate bool EnumWindowsProc(nint hwnd, nint lParam);
     public delegate nint LowLevelKeyboardProc(int nCode, nuint wParam, nint lParam);
-    public delegate nint LowLevelMouseProc(int nCode, nuint wParam, nint lParam);
     public delegate void WinEventDelegate(
         nint hWinEventHook,
         uint eventType,
@@ -61,23 +55,6 @@ internal static class NativeMethods
     {
         public uint vkCode;
         public uint scanCode;
-        public uint flags;
-        public uint time;
-        public nuint dwExtraInfo;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct Point
-    {
-        public int X;
-        public int Y;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct MsLlHookStruct
-    {
-        public Point pt;
-        public uint mouseData;
         public uint flags;
         public uint time;
         public nuint dwExtraInfo;
@@ -108,9 +85,6 @@ internal static class NativeMethods
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern nint SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, nint hMod, uint dwThreadId);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern nint SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, nint hMod, uint dwThreadId);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

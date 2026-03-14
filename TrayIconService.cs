@@ -28,7 +28,7 @@ public sealed class TrayIconService : IDisposable
         notifyIcon = new NotifyIcon
         {
             Icon = appIcon,
-            Text = "WinSwitch",
+            Text = "WinSwitch - Created by Agraja",
             Visible = false,
             ContextMenuStrip = menu,
         };
@@ -39,7 +39,7 @@ public sealed class TrayIconService : IDisposable
     public void Start()
     {
         notifyIcon.Visible = true;
-        ShowBalloonTip("WinSwitch is running", "Use Alt+Tab, middle-button swipe, or your mapped three-finger swipe.");
+        ShowBalloonTip("WinSwitch is running", "Created by Agraja. Use Alt+Tab or your mapped three-finger swipe.");
     }
 
     public void ShowBalloonTip(string title, string message)

@@ -2,18 +2,17 @@
 
 `WinSwitch` is a Windows app switcher built to feel closer to the macOS fullscreen swipe gesture.
 
-## What changed in 1.0.02
+Created by Agraja.
 
-- Replaced the old card overlay with a fullscreen swipe transition.
-- Added a settings window so users can configure gestures, timing, and update checks.
-- Added GitHub-release updates for `agraja38/WinSwitch`.
-- Fixed fast middle-button swipes so release-time threshold crossings still trigger a switch.
-- Added a manual `Check for Updates Now` button inside settings.
+## What changed in 1.0.03
+
+- Launching the app again now opens the existing instance's settings window instead of starting another copy.
+- Removed the middle-button swipe feature.
+- Added `Created by Agraja` branding through the app and installer.
 
 ## How it works
 
 - `Alt+Tab` and `Shift+Alt+Tab` can be intercepted by WinSwitch.
-- Holding the mouse middle button and swiping horizontally can switch apps.
 - Three-finger touchpad swipes work after mapping Windows advanced gestures to `Ctrl+Alt+Left` and `Ctrl+Alt+Right`.
 - When both the current app and target app cover the full display, WinSwitch animates a fullscreen slide between them.
 - If fullscreen mode is required in settings and either app is not fullscreen-like, WinSwitch falls back to a direct switch without the animation.
@@ -25,10 +24,8 @@ Open the tray icon and click `Settings`.
 Users can configure:
 
 - whether `Alt+Tab` is intercepted
-- whether middle-button swipes are enabled
 - whether mapped touchpad swipes are enabled
 - whether fullscreen-only animation is required
-- mouse swipe sensitivity
 - swipe commit delay
 - animation duration
 - update checks on launch
@@ -79,7 +76,7 @@ Generated installers:
 ## Publish a release
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\publish-release.ps1 -Version 1.0.02
+powershell -ExecutionPolicy Bypass -File .\publish-release.ps1 -Version 1.0.03
 ```
 
 ## Notes

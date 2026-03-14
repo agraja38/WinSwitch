@@ -1,6 +1,6 @@
 #define MyAppName "WinSwitch"
-#define MyAppVersion "1.0.02"
-#define MyAppPublisher "Codex"
+#define MyAppVersion "1.0.03"
+#define MyAppPublisher "Agraja"
 #define MyAppExeName "WinSwitch.exe"
 
 #ifndef Architecture
