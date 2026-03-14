@@ -26,7 +26,7 @@ AppId={{A5A9E5AA-DF2C-4B22-93BC-EFF287F2A9D0}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={autopf}\{#MyAppName}
+DefaultDirName={localappdata}\Programs\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 WizardStyle=modern
@@ -36,7 +36,7 @@ OutputDir=output
 OutputBaseFilename=WinSwitch-Setup-{#MyInstallerSuffix}
 ArchitecturesAllowed={#MyArchitecturesAllowed}
 ArchitecturesInstallIn64BitMode={#MyArchitecturesInstallMode}
-PrivilegesRequired=admin
+PrivilegesRequired=lowest
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Languages]

@@ -26,6 +26,10 @@ if (-not (Test-Path $innoCompiler)) {
 }
 
 if (-not (Test-Path $innoCompiler)) {
+    $innoCompiler = Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe"
+}
+
+if (-not (Test-Path $innoCompiler)) {
     throw "Inno Setup 6 was not found. Install it, then rerun this script."
 }
 
